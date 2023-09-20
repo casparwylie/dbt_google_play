@@ -34,7 +34,7 @@ daily_join as (
 
     select
         -- these columns are the grain of this model (day + country + package_name + product (sku_id))
-        coalesce(earnings.date_day, subscriptions.date_day) as date_day,
+        coalesce(cast(earnings.date_day as timestamp), subscriptions.date_day) as date_day,
         coalesce(earnings.country_short, subscriptions.country) as country_short,
         coalesce(earnings.package_name, subscriptions.package_name) as package_name,
         coalesce(earnings.sku_id, subscriptions.product_id) as sku_id,
@@ -53,7 +53,7 @@ daily_join as (
         subscriptions.total_active_subscriptions
     from earnings
     full outer join subscriptions
-        on earnings.date_day = subscriptions.date_day
+        on cast(earnings.date_day as timestamp) = subscriptions.date_day
         and earnings.package_name = subscriptions.package_name
         -- coalesce null countries otherwise they'll cause fanout with the full outer join
         and coalesce(earnings.country_short, 'null_country') = coalesce(subscriptions.country, 'null_country') -- in the source package we aggregate all null country records together into one batch per day
